@@ -1,5 +1,9 @@
 import io
 import matplotlib
+
+import seaborn as sns
+
+DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
@@ -29,8 +33,36 @@ def plot(df, filters):
     pivoted.plot(kind=kind, y="Sat_AVG", ax=ax)
     pivoted.plot(kind=kind, y="Sun_AVG", ax=ax)
 
-    ax.set_title( f"Time trend, averaged over {WINSIZE} - {filters}")
+    ax.set_title(f"Time trend, averaged over {WINSIZE} - {filters}")
+    return savefig()
+
+
+def savefig():
     output = io.BytesIO()
     plt.savefig(output, format="png")
     output.seek(0)
     return output.getbuffer()
+
+
+def plot2xx(df, filters):
+    fig, axes = plt.subplots(7, 1)
+
+    for idx, day in enumerate(DAYS):
+        filtered = df[df.day == day]
+        filtered = filtered["elapsed_seconds"]
+        axes[idx].set_title(day)
+        filtered.plot.hist(by="elapsed_seconds", bins=20, ax=axes[idx])
+    return savefig()
+
+
+def plot2(df, filters):
+    fig, ax = plt.subplots()
+
+    sns.boxplot(x="day", y="elapsed_seconds", order=DAYS, data=df)
+
+    sns.swarmplot(x="day", y="elapsed_seconds", order=DAYS, data=df, size=2, color=".3", linewidth=0)
+    ax.xaxis.grid(True)
+    ax.yaxis.grid(True)
+    ax.set(ylabel="seconds")
+
+    return savefig()

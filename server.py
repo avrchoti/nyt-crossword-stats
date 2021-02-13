@@ -34,14 +34,16 @@ def index():
     filters = []
     solved = request.args.get("solved", None)
     if solved is not None:
-        filters.append( f"solved={solved}")
-        df = df[df.solved==int(solved)]
+        filters.append(f"solved={solved}")
+        df = df[df.solved == int(solved)]
 
     imagedata = plot.plot(df, ",".join(filters))
-    with open( "xoxo.png", "wb") as of:
-        of.write( imagedata )
-    imagedata= base64.b64encode(imagedata).decode("utf-8")
-    return render_template("index.html", imagedata=imagedata)
+    imagedata = base64.b64encode(imagedata).decode("utf-8")
+
+    histdata = plot.plot2(df, ",".join(filters))
+    histdata = base64.b64encode(histdata).decode("utf-8")
+
+    return render_template("index.html", imagedata=imagedata, histdata=histdata)
 
 
 def runapp(app, host, port, debug):
