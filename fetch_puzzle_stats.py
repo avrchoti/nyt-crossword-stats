@@ -1,4 +1,6 @@
 import argparse
+import json
+import pathlib
 import os
 from csv import DictWriter, DictReader
 from datetime import datetime, timedelta
@@ -6,7 +8,7 @@ import requests
 import keyring
 from tqdm import tqdm
 
-BEGINNING_OF_TIME = datetime(year=1942, month=1, day=1)
+BEGINNING_OF_TIME = datetime(year=2016, month=9, day=1)
 
 FIELDS = [
     'date',
@@ -23,32 +25,36 @@ PUZZLE_INFO = API_ROOT + '/v2/puzzle/daily-{date}.json'
 SOLVE_INFO = API_ROOT + '/v2/game/{game_id}.json'
 DATE_FORMAT = '%Y-%m-%d'
 
-parser = argparse.ArgumentParser(description='Fetch NYT Crossword stats')
-parser.add_argument(
-    '-u', '--username', help='NYT Account Email Address', required=True)
-parser.add_argument(
-    '-p', '--password', help='NYT Account Password', required=False)
-parser.add_argument('-E', '--extend-file', action="store_true", help='Fetch records since last seen in CSV file and append to file')
-parser.add_argument(
-    '-s', '--start-date',
-    help='The first date to pull from, inclusive (defaults to 30 days ago)',
-    default=datetime.strftime(datetime.now() - timedelta(days=30), DATE_FORMAT)
-)
-parser.add_argument(
-    '-e', '--end-date',
-    help='The last date to pull from, inclusive (defaults to today)',
-    default=datetime.strftime(datetime.now(), DATE_FORMAT)
-)
-parser.add_argument(
-    '-o', '--output-csv',
-    help='The CSV file to write to',
-    default='data.csv'
-)
-parser.add_argument(
-    '--strict',
-    help='Don\'t allow missing puzzles or errors',
-    action='store_true',
-)
+def create_parser():
+   parser = argparse.ArgumentParser(description='Fetch NYT Crossword stats')
+   parser.add_argument(
+       '-u', '--username', help='NYT Account Email Address')
+   parser.add_argument(
+       '-p', '--password', help='NYT Account Password', required=False)
+   parser.add_argument('-E', '--extend-file', action="store_true", help='Fetch records since last seen in CSV file and append to file')
+   parser.add_argument('-C', '--use-cred-file',  action="store_true", help='Use credentials file')
+   parser.add_argument('-K', '--keyring',  action="store_true", help='Use keyring for password (credname nytimes)')
+   parser.add_argument(
+       '-s', '--start-date',
+       help='The first date to pull from, inclusive (defaults to 30 days ago)',
+       default=datetime.strftime(datetime.now() - timedelta(days=30), DATE_FORMAT)
+   )
+   parser.add_argument(
+       '-e', '--end-date',
+       help='The last date to pull from, inclusive (defaults to today)',
+       default=datetime.strftime(datetime.now(), DATE_FORMAT)
+   )
+   parser.add_argument(
+       '-o', '--output-csv',
+       help='The CSV file to write to',
+       default=workdir() / 'data.csv'
+   )
+   parser.add_argument(
+       '--strict',
+       help='Don\'t allow missing puzzles or errors',
+       action='store_true',
+   )
+   return parser
 
 
 def login(username, password):
@@ -154,16 +160,26 @@ def read_last_date_from_file(filename):
     res = datetime.strptime(fields[0], DATE_FORMAT)
     return res
 
+def read_credfile( ):
+   with open( workdir() / "credentials.json", "r" ) as f:
+      data = json.load( f )
+      return data[ "username"],data[ "password" ]
 
 
+def workdir():
+    return pathlib.Path( os.path.expanduser("~" ) ) / "nyt-crossword-data"
 
 if __name__ == '__main__':
+    parser = create_parser()
     args = parser.parse_args()
     if args.password:
         password = args.password
-    else:
+    elif args.keyring:
         password = keyring.get_password("nytimes", args.username)
-    cookie = login(args.username, password)
+    elif args.use_cred_file:
+        username, password = read_credfile( )
+
+    cookie = login(username, password)
     start_date = calc_start_date( args )
     end_date = datetime.strptime(args.end_date, DATE_FORMAT)
     print("Getting stats from {} until {}".format(
