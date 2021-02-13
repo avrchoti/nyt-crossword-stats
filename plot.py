@@ -8,7 +8,7 @@ def plot(df, filters):
     pivoted = df.pivot(index="date", columns="day", values="elapsed_seconds")
     pivoted = pivoted.interpolate()
 
-    WINSIZE = 14
+    WINSIZE = 140
 
     pivoted["Mon_AVG"] = pivoted["Mon"].rolling(window=WINSIZE).mean()
     pivoted["Tue_AVG"] = pivoted["Tue"].rolling(window=WINSIZE).mean()
