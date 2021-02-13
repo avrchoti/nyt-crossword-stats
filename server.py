@@ -31,6 +31,7 @@ logger.level = logging.INFO
 @app.route("/")
 def index():
     df = pandas.read_csv(files.data_file(), parse_dates=["date"])
+    df = df[df.streak_eligible==1]
 
     imagedata = plot.plot(df)
     with open( "xoxo.png", "wb") as of:
