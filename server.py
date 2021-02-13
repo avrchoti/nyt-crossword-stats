@@ -75,7 +75,7 @@ def parse_day(day):
     match = rex.match(day)
     if match:
         days = int(match.group(1))
-        return datetime.date.today() - datetime.timedelta(days=days)
+        return numpy.datetime64("today") - numpy.timedelta64(days,"D")
 
     res = numpy.datetime64(day)
     return res
