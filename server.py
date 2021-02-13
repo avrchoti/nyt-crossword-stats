@@ -1,6 +1,9 @@
 import base64
+import datetime
 import os
+import re
 
+import numpy
 import pandas
 
 import plot
@@ -37,6 +40,8 @@ def index():
         filters.append(f"solved={solved}")
         df = df[df.solved == int(solved)]
 
+    df = filter_time(df, request.args, filters)
+
     imagedata = plot.plot(df, ",".join(filters))
     imagedata = base64.b64encode(imagedata).decode("utf-8")
 
@@ -44,6 +49,36 @@ def index():
     histdata = base64.b64encode(histdata).decode("utf-8")
 
     return render_template("index.html", imagedata=imagedata, histdata=histdata)
+
+
+def filter_time(df, args, filters):
+    start = parse_day(args.get("start"))
+    x = ["["]
+    if start is not None:
+        df = df[df.date > start]
+        x.append(args.get("start"))
+
+    x.append(":")
+    end = parse_day(args.get("end"))
+    if end is not None:
+        df = df[df.date < end]
+        x.append(args.get("end"))
+
+    x.append("]")
+    filters.append("".join(x))
+    return df
+
+def parse_day(day):
+    if day is None:
+        return None
+    rex = re.compile( "now-([0-9]+)d")
+    match = rex.match(day)
+    if match:
+        days = int(match.group(1))
+        return datetime.date.today() - datetime.timedelta(days=days)
+
+    res = numpy.datetime64(day)
+    return res
 
 
 def runapp(app, host, port, debug):

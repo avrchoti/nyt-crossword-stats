@@ -2,6 +2,7 @@ import io
 import matplotlib
 
 import seaborn as sns
+from matplotlib.dates import HourLocator, DateFormatter
 
 DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
 matplotlib.use('Agg')
@@ -12,7 +13,7 @@ def plot(df, filters):
     pivoted = df.pivot(index="date", columns="day", values="elapsed_seconds")
     pivoted = pivoted.interpolate()
 
-    WINSIZE = 140
+    WINSIZE = 28
 
     pivoted["Mon_AVG"] = pivoted["Mon"].rolling(window=WINSIZE).mean()
     pivoted["Tue_AVG"] = pivoted["Tue"].rolling(window=WINSIZE).mean()
@@ -60,9 +61,10 @@ def plot2(df, filters):
 
     sns.boxplot(x="day", y="elapsed_seconds", order=DAYS, data=df)
 
-    sns.swarmplot(x="day", y="elapsed_seconds", order=DAYS, data=df, size=2, color=".3", linewidth=0)
+    sns.stripplot(x="day", y="elapsed_seconds", order=DAYS, data=df, size=2, color=".3", linewidth=0)
+    # sns.swarmplot(x="day", y="elapsed_seconds", order=DAYS, data=df, size=2, color=".3", linewidth=0)
     ax.xaxis.grid(True)
     ax.yaxis.grid(True)
     ax.set(ylabel="seconds")
-
+    ax.set_title(f"Time distribution - {filters}")
     return savefig()
