@@ -1,8 +1,22 @@
 import argparse
-from csv import DictWriter
+import os
+from csv import DictWriter, DictReader
 from datetime import datetime, timedelta
 import requests
+import keyring
 from tqdm import tqdm
+
+BEGINNING_OF_TIME = datetime(year=1942, month=1, day=1)
+
+FIELDS = [
+    'date',
+    'day',
+    'elapsed_seconds',
+    'solved',
+    'checked',
+    'revealed',
+    'streak_eligible',
+]
 
 API_ROOT = 'https://nyt-games-prd.appspot.com/svc/crosswords'
 PUZZLE_INFO = API_ROOT + '/v2/puzzle/daily-{date}.json'
@@ -13,7 +27,8 @@ parser = argparse.ArgumentParser(description='Fetch NYT Crossword stats')
 parser.add_argument(
     '-u', '--username', help='NYT Account Email Address', required=True)
 parser.add_argument(
-    '-p', '--password', help='NYT Account Password', required=True)
+    '-p', '--password', help='NYT Account Password', required=False)
+parser.add_argument('-E', '--extend-file', action="store_true", help='Fetch records since last seen in CSV file and append to file')
 parser.add_argument(
     '-s', '--start-date',
     help='The first date to pull from, inclusive (defaults to 30 days ago)',
@@ -93,28 +108,15 @@ def get_puzzle_stats(date, cookie):
     }
 
 
-if __name__ == '__main__':
-    args = parser.parse_args()
-    cookie = login(args.username, args.password)
-    start_date = datetime.strptime(args.start_date, DATE_FORMAT)
-    end_date = datetime.strptime(args.end_date, DATE_FORMAT)
-    print("Getting stats from {} until {}".format(
-        datetime.strftime(start_date, DATE_FORMAT),
-        datetime.strftime(end_date, DATE_FORMAT)))
+def fetch_and_write_to_csv(start_date, end_date, output_csv, strict):
+    fields = FIELDS
     date = start_date
-    fields = [
-        'date',
-        'day',
-        'elapsed_seconds',
-        'solved',
-        'checked',
-        'revealed',
-        'streak_eligible',
-    ]
-    with open(args.output_csv, 'w') as csvfile, \
-            tqdm(total=(end_date-start_date).days + 1) as pbar:
+    write_header = not os.path.exists(output_csv)
+    with open(output_csv, 'a', newline='') as csvfile, \
+            tqdm(total=(end_date - start_date).days + 1) as pbar:
         writer = DictWriter(csvfile, fields)
-        writer.writeheader()
+        if write_header:
+            writer.writeheader()
         count = 0
         while date <= end_date:
             date_str = datetime.strftime(date, DATE_FORMAT)
@@ -126,9 +128,45 @@ if __name__ == '__main__':
                 count += 1
             except Exception:
                 # Ignore missing puzzles errors in non-strict
-                if args.strict:
+                if strict:
                     raise
             pbar.update(1)
             date += timedelta(days=1)
+    print("{} rows written to {}".format(count, output_csv))
 
-    print("{} rows written to {}".format(count, args.output_csv))
+
+def calc_start_date(args):
+    if args.extend_file:
+        start_date = read_last_date_from_file( args.output_csv) + timedelta(days=1)
+    else:
+        start_date = datetime.strptime(args.start_date, DATE_FORMAT)
+    return start_date
+
+def read_last_date_from_file(filename):
+    try:
+        with open( filename) as f:
+            lines = f.readlines()
+    except FileNotFoundError:
+        # Start at the beginning of time
+        return BEGINNING_OF_TIME
+
+    fields = lines[-1].split(',')
+    res = datetime.strptime(fields[0], DATE_FORMAT)
+    return res
+
+
+
+
+if __name__ == '__main__':
+    args = parser.parse_args()
+    if args.password:
+        password = args.password
+    else:
+        password = keyring.get_password("nytimes", args.username)
+    cookie = login(args.username, password)
+    start_date = calc_start_date( args )
+    end_date = datetime.strptime(args.end_date, DATE_FORMAT)
+    print("Getting stats from {} until {}".format(
+        datetime.strftime(start_date, DATE_FORMAT),
+        datetime.strftime(end_date, DATE_FORMAT)))
+    fetch_and_write_to_csv(start_date, end_date, args.output_csv, args.strict)
