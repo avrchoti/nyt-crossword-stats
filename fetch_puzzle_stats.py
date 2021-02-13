@@ -1,12 +1,13 @@
 import argparse
 import json
-import pathlib
 import os
-from csv import DictWriter, DictReader
+from csv import DictWriter
 from datetime import datetime, timedelta
 import requests
 import keyring
 from tqdm import tqdm
+
+from files import data_file, cred_file
 
 BEGINNING_OF_TIME = datetime(year=2016, month=9, day=1)
 
@@ -47,7 +48,7 @@ def create_parser():
    parser.add_argument(
        '-o', '--output-csv',
        help='The CSV file to write to',
-       default=workdir() / 'data.csv'
+       default=data_file()
    )
    parser.add_argument(
        '--strict',
@@ -161,13 +162,10 @@ def read_last_date_from_file(filename):
     return res
 
 def read_credfile( ):
-   with open( workdir() / "credentials.json", "r" ) as f:
+   with open(cred_file(), "r") as f:
       data = json.load( f )
       return data[ "username"],data[ "password" ]
 
-
-def workdir():
-    return pathlib.Path( os.path.expanduser("~" ) ) / "nyt-crossword-data"
 
 if __name__ == '__main__':
     parser = create_parser()
