@@ -31,9 +31,13 @@ logger.level = logging.INFO
 @app.route("/")
 def index():
     df = pandas.read_csv(files.data_file(), parse_dates=["date"])
-    df = df[df.streak_eligible==1]
+    filters = []
+    solved = request.args.get("solved", None)
+    if solved is not None:
+        filters.append( f"solved={solved}")
+        df = df[df.solved==int(solved)]
 
-    imagedata = plot.plot(df)
+    imagedata = plot.plot(df, ",".join(filters))
     with open( "xoxo.png", "wb") as of:
         of.write( imagedata )
     imagedata= base64.b64encode(imagedata).decode("utf-8")
