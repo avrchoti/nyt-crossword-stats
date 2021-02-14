@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<h1>Status</h1>
+
+<ul>
+    <li>Today's status: {{status.today_done}}</li>
+</ul>
+
+<h1>Streaks</h1>
+<table>
+    <tr>
+        <th>
+            First Day
+        </th>
+        <th>
+            Last Day
+        </th>
+        <th>
+            Nr of Days
+        </th>
+    </tr>
+    {% for streak in status.streaks %}
+        <tr>
+            <td>{{streak.start_date}}</td>
+            <td>{{streak.end_date}}</td>
+            <td>{{streak.days}}</td>
+        </tr>
+    {% endfor %}
+</table>
+
+
+{% endblock %}
+

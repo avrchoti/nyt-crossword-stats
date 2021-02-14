@@ -1,17 +1,16 @@
 import base64
-import datetime
 import os
 import re
 
 import numpy
-import pandas
 
 import plot
 import webresources
-from flask import Flask, render_template, url_for, request, redirect, make_response, flash
+from flask import Flask, render_template, request
 
 import logging
-import files
+import status
+from dfreader import read_df
 
 template_folder = webresources.web_resources_root() / "templates"
 static_folder = webresources.web_resources_root() / "static"
@@ -32,8 +31,15 @@ logger.level = logging.INFO
 
 
 @app.route("/")
-def index():
-    df = pandas.read_csv(files.data_file(), parse_dates=["date"])
+def dstatus():
+    df = read_df()
+    status_values = status.calc_status(df)
+    return render_template("status.html", status=status_values)
+
+
+@app.route("/graphs")
+def graphs():
+    df = read_df()
     filters = []
     solved = request.args.get("solved", None)
     if solved is not None:
@@ -48,7 +54,7 @@ def index():
     histdata = plot.plot2(df, ",".join(filters))
     histdata = base64.b64encode(histdata).decode("utf-8")
 
-    return render_template("index.html", imagedata=imagedata, histdata=histdata)
+    return render_template("graphs.html", imagedata=imagedata, histdata=histdata)
 
 
 def filter_time(df, args, filters):
