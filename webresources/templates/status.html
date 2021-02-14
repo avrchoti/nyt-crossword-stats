@@ -22,11 +22,13 @@
         </th>
     </tr>
     {% for streak in status.streaks %}
-        <tr>
-            <td>{{streak.start_date}}</td>
-            <td>{{streak.end_date}}</td>
-            <td>{{streak.days}}</td>
-        </tr>
+        {% if streak.days >= 10 %}
+            <tr>
+                <td>{{streak.start_date}}</td>
+                <td>{{streak.end_date}}</td>
+                <td>{{streak.days}}</td>
+            </tr>
+        {% endif %}
     {% endfor %}
 </table>
 

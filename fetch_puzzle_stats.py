@@ -131,8 +131,11 @@ def fetch_and_write_to_csv(start_date, end_date, output_csv, strict):
                 solve = get_puzzle_stats(date_str, cookie)
                 solve['date'] = date_str
                 solve['day'] = datetime.strftime(date, '%a')
-                writer.writerow(solve)
-                count += 1
+                # Special case - if today isn't solved yet, do not add it to the file
+                # TODO: This should handle the time zone -
+                if date < end_date or solve['solved']:
+                    writer.writerow(solve)
+                    count += 1
             except Exception:
                 # Ignore missing puzzles errors in non-strict
                 if strict:
@@ -171,8 +174,10 @@ if __name__ == '__main__':
     parser = create_parser()
     args = parser.parse_args()
     if args.password:
+        username = args.username
         password = args.password
     elif args.keyring:
+        username = args.username
         password = keyring.get_password("nytimes", args.username)
     elif args.use_cred_file:
         username, password = read_credfile( )
