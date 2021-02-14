@@ -6,7 +6,7 @@ import numpy
 
 import plot
 import webresources
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, url_for
 
 import logging
 import status
@@ -34,7 +34,8 @@ logger.level = logging.INFO
 def dstatus():
     df = read_df()
     status_values = status.calc_status(df)
-    return render_template("status.html", status=status_values)
+    graph_uri = url_for("graphs", solved="1")
+    return render_template("status.html", graph_uri=graph_uri, status=status_values)
 
 
 @app.route("/graphs")
