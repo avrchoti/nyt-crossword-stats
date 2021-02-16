@@ -49,13 +49,16 @@ def graphs():
 
     df = filter_time(df, request.args, filters)
 
-    imagedata = plot.plot(df, ",".join(filters))
+    imagedata = plot.timetrend(df, ",".join(filters))
     imagedata = base64.b64encode(imagedata).decode("utf-8")
 
-    histdata = plot.plot2(df, ",".join(filters))
+    histdata = plot.box_per_day(df, ",".join(filters))
     histdata = base64.b64encode(histdata).decode("utf-8")
 
-    return render_template("graphs.html", imagedata=imagedata, histdata=histdata)
+    plotxx = plot.plot2xx(df, ",".join(filters))
+    plotxx = base64.b64encode(plotxx).decode("utf-8")
+
+    return render_template("graphs.html", imagedata=imagedata, histdata=histdata, plotxx=plotxx)
 
 
 def filter_time(df, args, filters):

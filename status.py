@@ -18,15 +18,20 @@ def calc_today_status(df, today, res):
     last = df[df.date == today]
     # print( last )
     today_status = "missing"
+    secs_today = None
     if len(last.index) == 1:
         row = last.iloc[0]
         if row.streak_eligible:
             today_status = "streak"
+            secs_today = row.elapsed_seconds
         elif row.solved:
             today_status = "done"
+            secs_today = row.elapsed_seconds
         else:
             today_status = "open"
     res["today_done"] = today_status
+    if secs_today is not None:
+        res["secs_today"] = secs_today
 
 
 def calc_streak_status(df, today, res):
