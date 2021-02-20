@@ -48,8 +48,8 @@ def render_history(history):
         day = ts.strftime("%Y-%m-%d")
         print(day)
         week = {}
-        for weekday, factor in values.items():
-            x = {"val": "%0.2f" % factor, "color": pick_color(factor)}
+        for weekday, vals in values.items():
+            x = {"val": "%0.2f" % vals["factor"], "seconds": render_seconds( vals["seconds"]), "color": pick_color(vals["factor"])}
             week[weekday] = x
         res[day] = week
     return res
@@ -78,11 +78,24 @@ def pick_color(factor):
         hue = 0.33
     x = x - 1  ## range 0 .. 1
     # x = 1 - x ### range 1 .. 0
-    #- x = x * 255
+    # - x = x * 255
     rgb = colorsys.hsv_to_rgb(hue, x, 1.0)
     print(rgb)
-    return "#" + "".join(["%02x" % int(x*255) for x in rgb])
+    return "#" + "".join(["%02x" % int(x * 255) for x in rgb])
 
+def render_seconds( seconds ):
+    hours = seconds // 3600
+    rem = seconds % 3600
+    minutes = rem // 60
+    secs = rem % 60
+
+    fields = []
+    if hours > 0:
+        fields.append( f"{hours}h")
+    if minutes > 0:
+        fields.append( f"{minutes}m")
+    fields.append (f"{secs}s")
+    return "".join(fields)
 
 @app.route("/graphs")
 def graphs():

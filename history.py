@@ -28,8 +28,9 @@ def calc_history(df):
         day = row["day"]
         if day == "Mon":
             monday = row["date"]
-        val = row["elapsed_seconds"] / medians[day]
-        week[day] = val
+        seconds = row["elapsed_seconds"]
+        val = seconds / medians[day]
+        week[day] = { "factor" : val, "seconds" : seconds }
         if day == "Sun":
             if monday is not None:
                 res[monday] = week
