@@ -1,9 +1,11 @@
+import colorsys
 import base64
 import os
 import re
 
 import numpy
 
+import history
 import plot
 import webresources
 from flask import Flask, render_template, request, url_for
@@ -35,7 +37,51 @@ def dstatus():
     df = read_df()
     status_values = status.calc_status(df)
     graph_uri = url_for("graphs", solved="1")
-    return render_template("status.html", graph_uri=graph_uri, status=status_values)
+    recent_history = history.calc_history(df)
+    recent_history = render_history(recent_history)
+    return render_template("status.html", graph_uri=graph_uri, status=status_values, recent_history=recent_history)
+
+
+def render_history(history):
+    res = {}
+    for ts, values in history.items():
+        day = ts.strftime("%Y-%m-%d")
+        print(day)
+        week = {}
+        for weekday, factor in values.items():
+            x = {"val": "%0.2f" % factor, "color": pick_color(factor)}
+            week[weekday] = x
+        res[day] = week
+    return res
+
+
+def pick_color(factor):
+    """
+       0.5 ... green
+       1 .... white
+       2 .... red
+
+       linear gradient between 0.5 and 1 and 1 and 2
+    """
+    SATURATION_FACTOR = 2  # linear between 1 and this
+    if factor < 1:
+        x = 1 / factor
+    else:
+        x = factor
+
+    if x >= SATURATION_FACTOR:
+        x = SATURATION_FACTOR
+
+    if factor > 1:
+        hue = 0
+    else:
+        hue = 0.33
+    x = x - 1  ## range 0 .. 1
+    # x = 1 - x ### range 1 .. 0
+    #- x = x * 255
+    rgb = colorsys.hsv_to_rgb(hue, x, 1.0)
+    print(rgb)
+    return "#" + "".join(["%02x" % int(x*255) for x in rgb])
 
 
 @app.route("/graphs")
@@ -78,14 +124,15 @@ def filter_time(df, args, filters):
     filters.append("".join(x))
     return df
 
+
 def parse_day(day):
     if day is None:
         return None
-    rex = re.compile( "now-([0-9]+)d")
+    rex = re.compile("now-([0-9]+)d")
     match = rex.match(day)
     if match:
         days = int(match.group(1))
-        return numpy.datetime64("today") - numpy.timedelta64(days,"D")
+        return numpy.datetime64("today") - numpy.timedelta64(days, "D")
 
     res = numpy.datetime64(day)
     return res

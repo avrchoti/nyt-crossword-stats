@@ -4,12 +4,10 @@ import matplotlib
 import numpy
 
 import seaborn as sns
-from matplotlib.dates import HourLocator, DateFormatter
 
+from days import DAYS_MON_FIRST
 from status import calc_today_status
 
-DAYS_MON_FIRST = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
-DAYS_SUN_FIRST = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 

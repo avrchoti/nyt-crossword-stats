@@ -33,6 +33,34 @@
 </table>
 
 
+
+<h1>Recent History</h1>
+<table>
+    <tr>
+        <th>Week</th>
+        <th>Mon</th>
+        <th>Tue</th>
+        <th>Wed</th>
+        <th>Thu</th>
+        <th>Fri</th>
+        <th>Sat</th>
+        <th>Sun</th>
+    </tr>
+
+    {% for monday, valu in recent_history.items() %}
+    <tr>
+        <td>{{monday}}</td>
+        {% for day, val in valu.items() %}
+
+        <td style="background-color:{{val.color}};">{{val.val}}</td>
+        {% endfor %}
+    </tr>
+    {% endfor %}
+
+
+</table>
+
+
 <a href="{{graph_uri}}">Graphs</a>
 
 
