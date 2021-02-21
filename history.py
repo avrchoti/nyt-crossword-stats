@@ -35,7 +35,7 @@ def calc_history(df):
             if monday is not None:
                 res[monday] = week
             week = {}
-    if monday is not None:
+    if week:
         res[monday] = week
 
     pprint.pprint(res)

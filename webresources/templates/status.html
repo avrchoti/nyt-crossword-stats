@@ -51,8 +51,7 @@
     <tr>
         <td>{{monday}}</td>
         {% for day, val in valu.items() %}
-
-        <td style="background-color:{{val.color}};" title="{{val.seconds}}">{{val.val}}</td>
+            <td style="background-color:{{val.color}};" title="{{val.seconds}}">{{val.val}}</td>
         {% endfor %}
     </tr>
     {% endfor %}
